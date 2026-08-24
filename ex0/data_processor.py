@@ -6,7 +6,7 @@ import abc
 
 class DataProcessor(abc.ABC):
     def __init__(self) -> None:
-        self.ingested: list = list()
+        self.ingested: list[str] = list()
         self.processing_rank = 0
 
     @abc.abstractmethod
@@ -95,9 +95,15 @@ class LogProcessor(DataProcessor):
         else:
             return False
 
-    def ingest(self, data: dict[str:str] | list[dict[str:str]]) -> None:
+    def ingest(self, data: dict[str, str] | list[dict[str, str]]) -> None:
         if self.validate(data):
-            pass
+            if isinstance(data, list):
+                for element in data:
+                    dict_value = ": ".join(element.values())
+                    self.ingested.append(dict_value)
+            elif isinstance(data, dict):
+                dict_value = ": ".join(data.values())
+                self.ingested.append(dict_value)
         else:
             raise ValueError("Got exception: Improper log data")
 
@@ -118,11 +124,11 @@ def main() -> None:
         print(f" {res}")
     except ValueError as error:
         print(f" {error}")
-    data = [1, 2, 3, 4, 5]
+    num_data = [1, 2, 3, 4, 5]
     try:
-        if num_test.validate(data):
-            print(f" Processing data: {data}")
-            num_test.ingest(data)
+        if num_test.validate(num_data):
+            print(f" Processing data: {num_data}")
+            num_test.ingest(num_data)
             print(" Extracting 3 values...")
             for _ in range(3):
                 out = num_test.output()
@@ -134,11 +140,11 @@ def main() -> None:
     text_test = TextProcessor()
     res = text_test.validate(42)
     print(f" Trying to validate input '42': {res}")
-    data = ["Hello", "Nexus", "World"]
+    text_data = ["Hello", "Nexus", "World"]
     try:
-        if text_test.validate(data):
-            print(f" Processing data: {data}")
-            text_test.ingest(data)
+        if text_test.validate(text_data):
+            print(f" Processing data: {text_data}")
+            text_test.ingest(text_data)
             print(" Extracting 1 value...")
             out = text_test.output()
             print(f" Text value {out[0]}: {out[1]}")
@@ -146,6 +152,21 @@ def main() -> None:
         print(f" {error}")
 
     print("\nTesting Log Processor...")
+    log_test = LogProcessor()
+    res = log_test.validate("Hello")
+    print(f" Trying to validate input 'Hello': {res}")
+    log_data = [{'log_level': 'NOTICE', 'log_message': 'Connection to server'},
+                {'log_level': 'ERROR', 'log_message': 'Unauthorized access!!'}]
+    try:
+        if log_test.validate(log_data):
+            print(f" Processing data: {log_data}")
+            log_test.ingest(log_data)
+            print(" Extracting 2 values...")
+            for _ in range(2):
+                out = log_test.output()
+                print(f" Log entry {out[0]}: {out[1]}")
+    except ValueError as error:
+        print(f" {error}")
 
 
 if __name__ == "__main__":
