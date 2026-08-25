@@ -120,11 +120,10 @@ def main() -> None:
     try:
         print(" Test invalid ingestion of string 'foo' "
               "without prior validation:")
-        res = num_test.ingest("foo")
-        print(f" {res}")
+        num_test.ingest("foo")  # type: ignore
     except ValueError as error:
         print(f" {error}")
-    num_data = [1, 2, 3, 4, 5]
+    num_data: list[int | float] = [1, 2, 3, 4, 5]
     try:
         if num_test.validate(num_data):
             print(f" Processing data: {num_data}")
