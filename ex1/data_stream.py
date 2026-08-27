@@ -134,8 +134,8 @@ class DataStream:
             print("=== DataStream statistics ===")
             for proc in self.processor_list:
                 total_processed = proc.processing_rank + len(proc.ingested)
-                print(f"{type(proc).__name__.replace("Proc", " Proc")}: "
-                      f"total {total_processed} items processed, "
+                proc_name = type(proc).__name__.replace("Proc", " Proc")
+                print(f"{proc_name}: total {total_processed} items processed, "
                       f"remaining {len(proc.ingested)} on processor")
 
 
