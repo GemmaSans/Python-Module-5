@@ -131,7 +131,7 @@ class DataStream:
         if len(self.processor_list) == 0:
             print("No processor found, no data\n")
         else:
-            print("=== DataStream statistics ===")
+            print("== DataStream statistics ==")
             for proc in self.processor_list:
                 total_processed = proc.processing_rank + len(proc.ingested)
                 proc_name = type(proc).__name__.replace("Proc", " Proc")
