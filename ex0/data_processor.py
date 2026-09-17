@@ -7,11 +7,11 @@ import abc
 class DataProcessor(abc.ABC):
     def __init__(self) -> None:
         self.ingested: list[str] = list()
-        self.processing_rank = 0
+        self.processing_rank: int = 0
 
     @abc.abstractmethod
     def validate(self, data: typing.Any) -> bool:
-        return True
+        pass
 
     @abc.abstractmethod
     def ingest(self, data: typing.Any) -> None:

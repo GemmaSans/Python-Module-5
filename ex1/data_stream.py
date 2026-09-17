@@ -4,14 +4,19 @@ import typing
 import abc
 
 
+def split_pascalcase(name: str) -> str:
+    res = "".join([" " + c if c.isupper() else c for c in name])
+    return res.strip()
+
+
 class DataProcessor(abc.ABC):
     def __init__(self) -> None:
         self.ingested: list[str] = list()
-        self.processing_rank = 0
+        self.processing_rank: int = 0
 
     @abc.abstractmethod
     def validate(self, data: typing.Any) -> bool:
-        return True
+        pass
 
     @abc.abstractmethod
     def ingest(self, data: typing.Any) -> None:
@@ -128,13 +133,13 @@ class DataStream:
                       f"Can't process element in stream: {element}")
 
     def print_processors_stats(self) -> None:
+        print("== DataStream statistics ==")
         if len(self.processor_list) == 0:
-            print("No processor found, no data\n")
+            print("No processor found, no data")
         else:
-            print("== DataStream statistics ==")
             for proc in self.processor_list:
                 total_processed = proc.processing_rank + len(proc.ingested)
-                proc_name = type(proc).__name__.replace("Proc", " Proc")
+                proc_name = split_pascalcase(type(proc).__name__)
                 print(f"{proc_name}: total {total_processed} items processed, "
                       f"remaining {len(proc.ingested)} on processor")
 
@@ -144,6 +149,7 @@ def main() -> None:
     print("Initialize Data Stream...")
     data_stream = DataStream()
     data_stream.print_processors_stats()
+    print()
 
     print("Registering Numeric Processor\n")
     numeric_proc = NumericProcessor()
@@ -160,8 +166,9 @@ def main() -> None:
     print(f"Send first batch of data on stream: {data_for_stream}")
     data_stream.process_stream(data_for_stream)
     data_stream.print_processors_stats()
+    print()
 
-    print("Registering other data processors\n")
+    print("Registering other data processors")
     text_proc = TextProcessor()
     log_proc = LogProcessor()
     data_stream.register_processor(text_proc)
@@ -170,8 +177,9 @@ def main() -> None:
     print("Send the same batch again")
     data_stream.process_stream(data_for_stream)
     data_stream.print_processors_stats()
+    print()
 
-    print("\nConsume some elements from the data processors: "
+    print("Consume some elements from the data processors: "
           "Numeric 3, Text 2, Log 1")
     for _ in range(3):
         numeric_proc.output()

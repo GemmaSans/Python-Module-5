@@ -4,14 +4,19 @@ import typing
 import abc
 
 
+def split_pascalcase(name: str) -> str:
+    res = "".join([" " + c if c.isupper() else c for c in name])
+    return res.strip()
+
+
 class DataProcessor(abc.ABC):
     def __init__(self) -> None:
         self.ingested: list[str] = list()
-        self.processing_rank = 0
+        self.processing_rank: int = 0
 
     @abc.abstractmethod
     def validate(self, data: typing.Any) -> bool:
-        return True
+        pass
 
     @abc.abstractmethod
     def ingest(self, data: typing.Any) -> None:
@@ -149,13 +154,13 @@ class DataStream:
                       f"Can't process element in stream: {element}")
 
     def print_processors_stats(self) -> None:
+        print("== DataStream statistics ==")
         if len(self.processor_list) == 0:
-            print("No processor found, no data\n")
+            print("No processor found, no data")
         else:
-            print("== DataStream statistics ==")
             for proc in self.processor_list:
                 total_processed = proc.processing_rank + len(proc.ingested)
-                proc_name = type(proc).__name__.replace("Proc", " Proc")
+                proc_name = split_pascalcase(type(proc).__name__)
                 print(f"{proc_name}: total {total_processed} items processed, "
                       f"remaining {len(proc.ingested)} on processor")
 
@@ -173,6 +178,7 @@ def main() -> None:
     print("Initialize Data Stream...")
     data_stream = DataStream()
     data_stream.print_processors_stats()
+    print()
 
     print("Registering Processors\n")
     numeric_proc = NumericProcessor()
@@ -187,11 +193,10 @@ def main() -> None:
               [{'log_level': 'WARNING',
                 'log_message': 'Telnet access! Use ssh instead'},
                {'log_level': 'INFO',
-                'log_message': 'User wil isconnected'}],
+                'log_message': 'User wil is connected'}],
               42, ['Hi', 'five']]
     print(f"Send first batch of data on stream: {batch1}\n")
     data_stream.process_stream(batch1)
-    print()
     data_stream.print_processors_stats()
     print()
     csv_plugin = CSVPlugin()
