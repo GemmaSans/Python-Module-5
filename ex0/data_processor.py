@@ -6,7 +6,7 @@ import abc
 
 class DataProcessor(abc.ABC):
     def __init__(self) -> None:
-        self.ingested: list[str] = list()
+        self.ingested: list[str] = []
         self.processing_rank: int = 0
 
     @abc.abstractmethod
@@ -18,6 +18,8 @@ class DataProcessor(abc.ABC):
         pass
 
     def output(self) -> tuple[int, str]:
+        if not self.ingested:
+            raise IndexError("Got exception: No data available to output")
         current_rank = self.processing_rank
         value = self.ingested.pop(0)
         self.processing_rank += 1
@@ -26,16 +28,9 @@ class DataProcessor(abc.ABC):
 
 class NumericProcessor(DataProcessor):
     def validate(self, data: typing.Any) -> bool:
-        if isinstance(data, (int, float)):
-            return True
-        elif isinstance(data, list):
-            for i in data:
-                if isinstance(i, (int, float)):
-                    continue
-                else:
-                    return False
-            return True
-        return False
+        if isinstance(data, list):
+            return all(isinstance(i, (int, float)) for i in data)
+        return isinstance(data, (int, float))
 
     def ingest(self, data: int | float | list[int | float]) -> None:
         if self.validate(data):
@@ -50,16 +45,9 @@ class NumericProcessor(DataProcessor):
 
 class TextProcessor(DataProcessor):
     def validate(self, data: typing.Any) -> bool:
-        if isinstance(data, str):
-            return True
-        elif isinstance(data, list):
-            for i in data:
-                if isinstance(i, str):
-                    continue
-                else:
-                    return False
-            return True
-        return False
+        if isinstance(data, list):
+            return all(isinstance(i, str) for i in data)
+        return isinstance(data, str)
 
     def ingest(self, data: str | list[str]) -> None:
         if self.validate(data):
@@ -75,25 +63,17 @@ class TextProcessor(DataProcessor):
 class LogProcessor(DataProcessor):
     def validate(self, data: typing.Any) -> bool:
         if isinstance(data, dict):
-            for x, y in data.items():
-                if isinstance(x, str) and isinstance(y, str):
-                    continue
-                else:
-                    return False
-            return True
-        elif isinstance(data, list):
+            return all(isinstance(k, str) and isinstance(v, str)
+                       for k, v in data.items())
+        if isinstance(data, list):
             for element in data:
-                if isinstance(element, dict):
-                    for x, y in element.items():
-                        if isinstance(x, str) and isinstance(y, str):
-                            continue
-                        else:
-                            return False
-                else:
+                if not isinstance(element, dict):
+                    return False
+                if not all(isinstance(k, str) and isinstance(v, str)
+                           for k, v in element.items()):
                     return False
             return True
-        else:
-            return False
+        return False
 
     def ingest(self, data: dict[str, str] | list[dict[str, str]]) -> None:
         if self.validate(data):
